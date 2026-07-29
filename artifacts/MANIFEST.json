@@ -9,6 +9,6 @@
     "output_name": "bridge-small-server-package.tar.gz",
     "sha256": "000c3f87662e3037b6bfd45e00fbc25413b18a0093fe7bc25fb9631df6ae7cdb",
     "bytes": 139484,
-    "parts": 12
+    "parts": 46
   }
 }
