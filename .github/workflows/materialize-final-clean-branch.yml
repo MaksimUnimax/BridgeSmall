@@ -31,11 +31,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(find bootstrap-xz -maxdepth 1 -type f -name 'part-*' | wc -l)" -eq 16
+          PART_COUNT="$(find bootstrap-xz -maxdepth 1 -type f -name 'part-*' | wc -l)"
+          echo "part_count=${PART_COUNT}"
+          test "${PART_COUNT}" -eq 16
+          for file in bootstrap-xz/part-*; do printf '%s %s\n' "$(wc -c < "$file")" "$file"; done
           cat bootstrap-xz/part-* | base64 -d > /tmp/clean.tar.xz
+          wc -c /tmp/clean.tar.xz
+          sha256sum /tmp/clean.tar.xz
           echo 'd40f2e28e553f7a4d8e6b7023ab69be34872e14319d09a9941180da23ee5b08b  /tmp/clean.tar.xz' | sha256sum -c -
+          echo 'archive_top_level:'
+          tar -tJf /tmp/clean.tar.xz | sed -n '1,30p'
           mkdir -p /tmp/clean
           tar -xJf /tmp/clean.tar.xz -C /tmp/clean
+          find /tmp/clean -maxdepth 2 -mindepth 1 -print | sort | sed -n '1,80p'
           test -f /tmp/clean/README.md
           test -d /tmp/clean/extension/source
           test -d /tmp/clean/server/source
