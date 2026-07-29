@@ -7,18 +7,24 @@ on:
     paths:
       - 'bootstrap-xz/**'
       - '.github/workflows/materialize-final-clean-branch.yml'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   materialize:
+    if: github.event_name != 'pull_request' || github.head_ref == 'cleanup/complete-bridge-package-20260729'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout bootstrap branch
         uses: actions/checkout@v4
         with:
+          ref: cleanup/complete-bridge-package-20260729
           fetch-depth: 0
 
       - name: Reconstruct and verify clean package
@@ -75,6 +81,8 @@ jobs:
           python -m unittest discover -s tests -v
           cd ../..
           python -m compileall -q server/source/app server/source/tests server/scripts
+          find server/source server/scripts -type d -name __pycache__ -prune -exec rm -rf {} +
+          find server/source server/scripts -type f -name '*.pyc' -delete
           bash -n server/scripts/install.sh
           bash -n server/scripts/rollback.sh
           echo '0a21193e3bde3e9e0b6adb76eb516f2fbc9db2b84137419812a969f2e2e8ba92  extension/release/business-bridge-chatgpt-extension-v2.0.0.20-autorun-ui-hidden.zip' | sha256sum -c -
