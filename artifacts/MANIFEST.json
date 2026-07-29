@@ -3,12 +3,12 @@
     "output_name": "business-bridge-chatgpt-extension-v2.0.0.20-autorun-ui-hidden.zip",
     "sha256": "0a21193e3bde3e9e0b6adb76eb516f2fbc9db2b84137419812a969f2e2e8ba92",
     "bytes": 89476,
-    "parts": 4
+    "parts": 15
   },
   "server": {
     "output_name": "bridge-small-server-package.tar.gz",
     "sha256": "000c3f87662e3037b6bfd45e00fbc25413b18a0093fe7bc25fb9631df6ae7cdb",
     "bytes": 139484,
-    "parts": 7
+    "parts": 24
   }
 }
