@@ -20,8 +20,8 @@
 
 ## Быстрый маршрут
 
-1. Передай Codex содержимое [`docs/CODEX_SERVER_DEPLOY_PROMPT.md`](docs/CODEX_SERVER_DEPLOY_PROMPT.md).
-2. Скачай ZIP из [`extension/release/`](extension/release/) и установи его через `chrome://extensions` → «Режим разработчика» → «Загрузить распакованное расширение».
+1. Передай Codex содержимое [`docs/CODEX_SERVER_DEPLOY_PROMPT.md`](docs/CODEX_SERVER_DEPLOY_PROMPT.md). Codex восстановит server package командой `python3 tools/materialize.py --server`.
+2. На Windows скачай репозиторий через **Code → Download ZIP**, распакуй и выполни `powershell -ExecutionPolicy Bypass -File tools/materialize-extension.ps1`. Затем загрузи папку `extension/unpacked` через `chrome://extensions`.
 3. Создай SSH-туннель по [`docs/SSH_TUNNEL_GUIDE.md`](docs/SSH_TUNNEL_GUIDE.md).
 4. Настрой Bridge-профиль по [`docs/CHATGPT_OPERATOR_GUIDE.md`](docs/CHATGPT_OPERATOR_GUIDE.md).
 5. Пройди [`docs/ACCEPTANCE_TEST.md`](docs/ACCEPTANCE_TEST.md).
