@@ -1,0 +1,97 @@
+name: Materialize final clean branch
+
+on:
+  push:
+    branches:
+      - cleanup/complete-bridge-package-20260729
+    paths:
+      - 'bootstrap-xz/**'
+      - '.github/workflows/materialize-final-clean-branch.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout bootstrap branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct and verify clean package
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find bootstrap-xz -maxdepth 1 -type f -name 'part-*' | wc -l)" -eq 16
+          cat bootstrap-xz/part-* | base64 -d > /tmp/clean.tar.xz
+          echo 'd40f2e28e553f7a4d8e6b7023ab69be34872e14319d09a9941180da23ee5b08b  /tmp/clean.tar.xz' | sha256sum -c -
+          mkdir -p /tmp/clean
+          tar -xJf /tmp/clean.tar.xz -C /tmp/clean
+          test -f /tmp/clean/README.md
+          test -d /tmp/clean/extension/source
+          test -d /tmp/clean/server/source
+
+      - name: Reconstruct and verify extension ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/extension
+          cat artifacts/extension/*.part | base64 -d > /tmp/extension/business-bridge-chatgpt-extension-v2.0.0.20-autorun-ui-hidden.zip
+          echo '0a21193e3bde3e9e0b6adb76eb516f2fbc9db2b84137419812a969f2e2e8ba92  /tmp/extension/business-bridge-chatgpt-extension-v2.0.0.20-autorun-ui-hidden.zip' | sha256sum -c -
+
+      - name: Build final branch from current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -B cleanup/complete-bridge-package-20260729-final origin/main
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a /tmp/clean/. .
+          mkdir -p extension/release
+          cp /tmp/extension/business-bridge-chatgpt-extension-v2.0.0.20-autorun-ui-hidden.zip extension/release/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Validate final worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd extension/source
+          npm test
+          cd ../..
+          find extension/source -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          cd server/source
+          python -m unittest discover -s tests -v
+          cd ../..
+          python -m compileall -q server/source/app server/source/tests server/scripts
+          bash -n server/scripts/install.sh
+          bash -n server/scripts/rollback.sh
+          echo '0a21193e3bde3e9e0b6adb76eb516f2fbc9db2b84137419812a969f2e2e8ba92  extension/release/business-bridge-chatgpt-extension-v2.0.0.20-autorun-ui-hidden.zip' | sha256sum -c -
+          test ! -d artifacts
+          test ! -d extension/unpacked
+          ! find . -type d -name __pycache__ -print -quit | grep -q .
+          ! find . -type f \( -name '*.pyc' -o -name '*.sqlite' -o -name '*.sqlite3' -o -name '*-wal' -o -name '*-shm' -o -name '*.token' \) -print -quit | grep -q .
+          grep -F '<button id="start" class="primary" hidden aria-hidden="true" tabindex="-1">▶ Авторежим</button>' extension/source/popup.html
+          grep -F 'BB2_START_RUN' extension/source/popup.js
+          grep -F 'BB2_START_RUN' extension/source/service_worker.js
+
+      - name: Commit and push final branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Replace temporary repository with complete BridgeSmall package'
+          git push --force-with-lease origin cleanup/complete-bridge-package-20260729-final
